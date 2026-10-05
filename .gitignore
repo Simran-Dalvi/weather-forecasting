@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache.sqlite
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Project-generated data
+data/raw/*
+data/processed/*
+data/prediction/*
+data/predictions/*
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/prediction/.gitkeep
+
+# Generated model artifacts
+models/*
+
+# Frontend
+node_modules/
+dist/
+
+# Internal project documentation
+project explanation.docx
+
+# Generated project artifacts
+*.egg-info/
+*.zip
