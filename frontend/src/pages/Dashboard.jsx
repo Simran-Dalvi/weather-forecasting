@@ -1,3 +1,32 @@
+import WeatherChart from "../components/WeatherChart"
+
+const temperatureData = [
+    { time: "12 PM", temperature: 29 },
+    { time: "1 PM", temperature: 30 },
+    { time: "2 PM", temperature: 31 },
+    { time: "3 PM", temperature: 30 },
+    { time: "4 PM", temperature: 29 },
+    { time: "5 PM", temperature: 28 },
+]
+
+const humidityData = [
+  { time: "12 PM", humidity: 65 },
+  { time: "1 PM", humidity: 62 },
+  { time: "2 PM", humidity: 60 },
+  { time: "3 PM", humidity: 64 },
+  { time: "4 PM", humidity: 68 },
+  { time: "5 PM", humidity: 72 },
+]
+
+const rainfallData = [
+  { time: "12 PM", rainfall: 0 },
+  { time: "1 PM", rainfall: 0 },
+  { time: "2 PM", rainfall: 0.2 },
+  { time: "3 PM", rainfall: 0 },
+  { time: "4 PM", rainfall: 0 },
+  { time: "5 PM", rainfall: 0 },
+]
+
 function Dashboard() {
     return (
         <div className="space-y-8">
@@ -72,6 +101,34 @@ function Dashboard() {
                     </p>
                 </div>
             </section>
+
+            {/* Temperature Chart */}
+            <WeatherChart 
+                title= "Temperature Trend"
+                data={temperatureData}
+                dataKey="temperature"
+                color="#F97316"
+                unit="°C"
+            />
+
+            {/* Humidity and Rainfall Charts */}
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <WeatherChart
+                    title="Humidity"
+                    data={humidityData}
+                    dataKey="humidity"
+                    color="#0EA5E9"
+                    unit="%"
+                />
+
+                <WeatherChart
+                    title="Rainfall"
+                    data={rainfallData}
+                    dataKey="rainfall"
+                    color="#6366F1"
+                    unit=" mm"
+                />
+            </div>
         </div>
     )
 }
