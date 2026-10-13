@@ -70,6 +70,7 @@ def load_latest_data(filename: str = "latest_weather.csv") -> pd.DataFrame:
 
 def load_today_data(
         filename: str = "latest_weather.csv",
+        now_utc: pd.Timestamp | None = None,
 ) -> pd.DataFrame:
     """
     Load today's hourly weather data from the latest raw dataset.
@@ -90,15 +91,40 @@ def load_today_data(
         parse_dates = ["date"],
     )
 
+    if df.empty:
+        return df
+
+    # All timestamps are stored in UTC.
     df["date"] = pd.to_datetime(df["date"], utc=True)
 
+    # Use the start of the current UTC hour as the cutoff.
+    if now_utc is None:
+        now_utc = pd.Timestamp.now(tz="UTC")
+    else:
+        now_utc = pd.Timestamp(now_utc)
+
+    if now_utc.tzinfo is None:
+        raise ValueError("now_utc must be timezone-aware.")
+
+    now_utc = now_utc.tz_convert("UTC")
+
+    current_hour_utc = now_utc.floor("h")
+
+    # Exclude the current, incomplete hour and future timestamps.
+    df = df[df["date"] < current_hour_utc].copy()
+
+    # Select observations belonging to today's local calendar date.
     local_dates = df["date"].dt.tz_convert("Asia/Kolkata")
+    today = now_utc.tz_convert("Asia/Kolkata").date()
 
-    today = pd.Timestamp.now(tz="Asia/Kolkata").date()
+    today_data = df[local_dates.dt.date == today].copy()
 
-    today_data = df[
-        local_dates.dt.date == today
-    ].copy()
+    # Keep one record per timestamp and return chronological data.
+    today_data = (
+        today_data.drop_duplicates(subset=["date"], keep="last")
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
 
     return today_data
 

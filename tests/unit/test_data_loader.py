@@ -104,3 +104,33 @@ def test_load_processed_dataset_file_not_found(tmp_path):
 
     with pytest.raises(FileNotFoundError):
         load_processed_dataset(feature_store_path=missing_file)
+
+def test_load_today_data_excludes_current_and_future_hours(
+        tmp_path, monkeypatch
+):
+    from weather_forecasting.data import raw_dataset
+    now_utc = pd.Timestamp("2026-10-12 06:30:00", tz = "UTC")
+
+    data = pd.DataFrame(
+        {
+            "date": [
+                "2026-10-12 04:00:00+00:00",
+                "2026-10-12 05:00:00+00:00",
+                "2026-10-12 06:00:00+00:00",
+                "2026-10-12 07:00:00+00:00",                                
+            ],
+            "Temperature":[25.0, 26.0, 27.0, 28.0],
+        }
+    )
+
+    file_path = tmp_path / "latest_weather.csv"
+    data.to_csv(file_path, index=False)
+
+    monkeypatch.setattr(raw_dataset, "RAW_DATA_DIR", tmp_path)
+
+    result = raw_dataset.load_today_data(now_utc = now_utc)
+
+    assert result["date"].tolist() == [
+        pd.Timestamp("2026-10-12 04:00:00", tz="UTC"),
+        pd.Timestamp("2026-10-12 05:00:00", tz="UTC"),
+    ]
