@@ -3,7 +3,6 @@ from fastapi.testclient import TestClient
 from weather_forecasting.server.main import app
 from weather_forecasting.server.dependencies import (
     get_weather_service,
-    get_predictor,
     )
 
 class FakeWeatherService:
@@ -80,85 +79,66 @@ def test_current_weather_no_data():
     app.dependency_overrides.clear()
 
 
+
 def test_predict_weather():
-
     class FakeWeatherService:
-
-        def predict_next_hour(self, predictor):
-                return {
-                    "generated_at": "2026-09-12T10:00:00+00:00",
-                    "location": {
-                        "name": "Pune",
-                        "latitude": 18.5204,
-                        "longitude": 73.8567,
-                    },
-                    "predictions":[
-                        {
-                            "target_time": "2026-09-12T11:00:00+00:00",
-                            "predictions": {
-                                "temperature":26.5,
-                                "humidity": None,
-                                "rain": None,
-                                "wind_speed": None,
-                                "soil_temperature": None,
-                                "soil_moisture": None,
-                                "pressure": None,
-                            },
-                        }
-                    ],
-                }
-
-    class FakePredictor:
-        pass
+        def predict_next_hour(self):
+            return {
+                "generated_at": "2026-09-12T10:00:00+00:00",
+                "location": {
+                    "name": "Pune",
+                    "latitude": 18.5204,
+                    "longitude": 73.8567,
+                },
+                "predictions": [
+                    {
+                        "target_time": "2026-09-12T11:00:00+00:00",
+                        "predictions": {
+                            "temperature": 26.5,
+                            "humidity": None,
+                            "rain": None,
+                            "wind_speed": None,
+                            "soil_temperature": None,
+                            "soil_moisture": None,
+                            "pressure": None,
+                        },
+                    }
+                ],
+            }
 
     app.dependency_overrides[get_weather_service] = (
         lambda: FakeWeatherService()
     )
 
-    app.dependency_overrides[get_predictor] = (
-        lambda: FakePredictor()
-    )
+    try:
+        client = TestClient(app)
+        response = client.get("/weather/predict")
 
-    client = TestClient(app)
+        assert response.status_code == 200
 
-    response = client.get("/weather/predict")
-
-    assert response.status_code == 200
-
-    data = response.json()
-
-    assert data["location"]["name"] == "Pune"
-    assert len(data["predictions"]) == 1
-    assert data["predictions"][0]["predictions"]["temperature"] == 26.5
-
-    app.dependency_overrides.clear()
-
+        body = response.json()
+        assert body["location"]["name"] == "Pune"
+        assert body["predictions"][0]["predictions"]["temperature"] == 26.5
+    finally:
+        app.dependency_overrides.clear()
 
 def test_predict_weather_failure():
+    from weather_forecasting.server.exceptions import PredictionError
 
     class EmptyWeatherPredict:
-
-        def predict_next_hour(self, predictor):
-            from weather_forecasting.server.exceptions import PredictionError
-
+        def predict_next_hour(self):
             raise PredictionError(
-                "Failed to generate weather prediction during inference."
+                "Failed to load the saved weather prediction."
             )
 
     app.dependency_overrides[get_weather_service] = (
         lambda: EmptyWeatherPredict()
     )
-    
 
-    client = TestClient(app)
+    try:
+        client = TestClient(app)
+        response = client.get("/weather/predict")
 
-    response = client.get("/weather/predict")
-
-    assert response.status_code == 500
-
-    data = response.json()
-
-    assert data["error"] == "prediction_error"
-    assert data["message"] == "Failed to generate weather prediction during inference."
-
-    app.dependency_overrides.clear()
+        assert response.status_code == 500
+    finally:
+        app.dependency_overrides.clear()

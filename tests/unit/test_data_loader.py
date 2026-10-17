@@ -13,6 +13,8 @@ from weather_forecasting.data.processed_dataset import (
     load_processed_dataset,
 )
 
+from weather_forecasting.data import prediction_dataset
+
 def test_load_latest_data(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "weather_forecasting.data.raw_dataset.RAW_DATA_DIR",
@@ -134,3 +136,52 @@ def test_load_today_data_excludes_current_and_future_hours(
         pd.Timestamp("2026-10-12 04:00:00", tz="UTC"),
         pd.Timestamp("2026-10-12 05:00:00", tz="UTC"),
     ]
+
+def test_load_prediction_returns_future_prediction(
+        tmp_path, monkeypatch
+):
+    predictions = pd.DataFrame(
+        {
+            "prediction_time": ["2026-10-13T09:00:00Z"],
+            "target_time": ["2026-10-13T10:00:00Z"],
+            "temperature_1hr_prediction": [26.5],
+        }
+    )
+
+    file_path = tmp_path / "predictions.csv"
+    predictions.to_csv(file_path, index = False)
+
+    monkeypatch.setattr(
+        prediction_dataset, "PREDICTIONS_PATH", file_path
+    )
+
+    result = prediction_dataset.load_latest_prediction(
+        now_utc = pd.Timestamp("2026-10-13T09:30:00Z")
+    )
+
+    assert result["target_time"] == pd.Timestamp("2026-10-13T10:00:00Z")
+    assert result["temperature_1hr_prediction"] == 26.5
+
+def test_load_latest_prediction_rejects_expired_prediction(
+        tmp_path, monkeypatch
+):
+    predictions = pd.DataFrame(
+        {
+            "prediction_time": ["2026-10-13T09:00:00Z"],
+            "target_time": ["2026-10-13T10:00:00Z"],
+            "temperature_1hr_prediction": [26.5],
+        }
+    )
+
+    file_path = tmp_path / "predictions.csv"
+
+    predictions.to_csv(file_path, index =False)
+
+    monkeypatch.setattr(
+        prediction_dataset, "PREDICTIONS_PATH", file_path
+    )
+
+    with pytest.raises(ValueError, match="prediction has expired"):
+        prediction_dataset.load_latest_prediction(
+            now_utc = pd.Timestamp("2026-10-13T10:00:00Z")
+        )

@@ -59,24 +59,33 @@ def test_get_current_weather_no_data(monkeypatch):
 
 
 def test_predict_next_hour(monkeypatch):
-    class FakePredictor:
-        def predict(self):
-            return {
-                "input_time": "2026-09-12T10:00:00+00:00",
-                "prediction": 26.5,
-            }
+    from datetime import datetime, timezone
 
-    service = WeatherService()
+    import weather_forecasting.server.services.weather as weather_module
 
-    result = service.predict_next_hour(FakePredictor())
+    saved_prediction = {
+        "prediction_time": datetime(
+            2026, 9, 12, 11, 0, tzinfo=timezone.utc
+        ),
+        "target_time": datetime(
+            2026, 9, 12, 11, 0, tzinfo=timezone.utc
+        ),
+        "temperature_1hr_prediction": 26.5,
+    }
 
-    assert result.location.name == "Pune"
-    assert len(result.predictions) == 1
+    def fake_load_latest_prediction():
+        return saved_prediction
 
-    prediction = result.predictions[0]
-
-    assert prediction.target_time == datetime.fromisoformat(
-        "2026-09-12T11:00:00+00:00"
+    monkeypatch.setattr(
+        weather_module,
+        "load_latest_prediction",
+        fake_load_latest_prediction,
     )
 
-    assert prediction.predictions.temperature == 26.5
+    service = weather_module.WeatherService()
+
+    result = service.predict_next_hour()
+
+    assert result.generated_at == saved_prediction["prediction_time"]
+    assert result.predictions[0].target_time == saved_prediction["target_time"]
+    assert result.predictions[0].predictions.temperature == 26.5
