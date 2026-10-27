@@ -3,11 +3,13 @@ from weather_forecasting.server.routers.health import router
 from weather_forecasting.server.routers.weather import weather_router
 from weather_forecasting.server.exceptions import(
     WeatherDataNotFoundError,
-    PredictionError
+    PredictionError,
+    PredictionUnavailableError,
 )
 from weather_forecasting.server.handlers import (
     weather_data_not_found_handler,
-    prediction_error_handler
+    prediction_error_handler,
+    prediction_unavailable_handler,
 )
 
 
@@ -25,6 +27,10 @@ app.add_exception_handler(
     prediction_error_handler
 )
 
-app.include_router(router)
+app.add_exception_handler(
+    PredictionUnavailableError,
+    prediction_unavailable_handler,
+)
 
+app.include_router(router)
 app.include_router(weather_router)

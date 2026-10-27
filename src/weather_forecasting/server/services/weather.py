@@ -4,7 +4,10 @@ from weather_forecasting.server.schemas.weather import (
     Location, WeatherPrediction, WeatherPredictionPoint,
     WeatherPredictionResponse,WeatherObservation, CurrentWeatherResponse)
 from weather_forecasting.data.prediction_dataset import load_latest_prediction
-from weather_forecasting.server.exceptions import (WeatherDataNotFoundError, PredictionError)
+from weather_forecasting.server.exceptions import (WeatherDataNotFoundError, 
+                                                   PredictionError,
+                                                   PredictionUnavailableError,
+                                                   )
 from weather_forecasting.utils.logger import logger
 
 
@@ -21,7 +24,7 @@ class WeatherService:
             prediction_result = load_latest_prediction()
         except (FileNotFoundError, ValueError) as exc:
             logger.error(f"Failed to load a usable saved prediction: {exc}")
-            raise PredictionError(str(exc)) from exc
+            raise PredictionUnavailableError(str(exc)) from exc
 
         prediction_time = prediction_result["prediction_time"]
         target_time = prediction_result["target_time"]

@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 
 from weather_forecasting.server.exceptions import (
     WeatherDataNotFoundError,
-    PredictionError
+    PredictionError,
+    PredictionUnavailableError
 )
 
 async def weather_data_not_found_handler(
@@ -28,4 +29,16 @@ async def prediction_error_handler(
             "error": "prediction_error",
             "message": str(exc),
         }
+    )
+
+async def prediction_unavailable_handler(
+        request: Request,
+        exc: PredictionUnavailableError,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code = 503,
+        content={
+            "error": "prediction_unavailable",
+            "message": str(exc),
+        },
     )

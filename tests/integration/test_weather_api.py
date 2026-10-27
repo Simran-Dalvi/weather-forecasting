@@ -142,3 +142,31 @@ def test_predict_weather_failure():
         assert response.status_code == 500
     finally:
         app.dependency_overrides.clear()
+
+def test_predict_weather_expired_prediction(monkeypatch):
+    from weather_forecasting.data import prediction_dataset
+    from weather_forecasting.server.services.weather import WeatherService
+    from weather_forecasting.server.dependencies import get_weather_service
+
+    def fake_load_latest_prediction():
+        raise ValueError("The latest saved prediction has expired.")
+
+    monkeypatch.setattr(
+        "weather_forecasting.server.services.weather.load_latest_prediction",
+        fake_load_latest_prediction,
+    )
+
+    app.dependency_overrides[get_weather_service] = (
+        lambda: WeatherService()
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.get("/weather/predict")
+
+        assert response.status_code == 503
+        assert response.json()["error"] == "prediction_unavailable"
+        assert "expired" in response.json()["message"]
+    finally:
+        app.dependency_overrides.clear()
+

@@ -6,3 +6,6 @@ class WeatherDataNotFoundError(WeatherForecastingError):
 
 class PredictionError(WeatherForecastingError):
     """Raised when weather prediction fails."""
+
+class PredictionUnavailableError(PredictionError):
+    """Raise when no usable saved prediction is available"""
