@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from weather_forecasting.server.routers.health import router
 from weather_forecasting.server.routers.weather import weather_router
 from weather_forecasting.server.exceptions import(
@@ -16,6 +17,14 @@ from weather_forecasting.server.handlers import (
 app = FastAPI(title="Weather Forecasting API",
               description="API for weather forecasting application",
               version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_exception_handler(
     WeatherDataNotFoundError,

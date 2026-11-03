@@ -1,4 +1,9 @@
+import { useEffect, useState } from "react"
 import WeatherChart from "../components/WeatherChart"
+import {
+    getCurrentWeather,
+    getWeatherPrediction,
+} from "../services/api"
 
 const temperatureData = [
     { time: "12 PM", temperature: 29 },
@@ -27,7 +32,43 @@ const rainfallData = [
   { time: "5 PM", rainfall: 0 },
 ]
 
+
 function Dashboard() {
+    const [weather, setWeather] = useState(null)
+    const [prediction, setPrediction] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] =useState(null)
+    useEffect(() => {
+        async function fetchWeatherData() {
+            try {
+                setLoading(true)
+                setError(null)
+
+                const [currentData, predictionData] = await Promise.all([
+                    getCurrentWeather(),
+                    getWeatherPrediction(),
+                ])
+
+                setWeather(currentData)
+                setPrediction(predictionData)
+            } catch(err) {
+                console.error("Failed to fetch weather data:", err)
+                setError("Unable to load weather data. Please try again.")
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchWeatherData()
+    }, [])
+
+    if (loading) {
+        return <p className="text-gray-500">Loading weather data...</p>
+    }
+
+    if (error) {
+        return <p className="text-red-500">{error}</p>
+    }
+
     return (
         <div className="space-y-8">
             <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
