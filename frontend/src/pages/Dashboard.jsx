@@ -69,6 +69,21 @@ function Dashboard() {
         return <p className="text-red-500">{error}</p>
     }
 
+    const hourlyRecords = weather?.hourly ?? []
+    const latestWeather = hourlyRecords[hourlyRecords.length - 1] ?? null
+    const nextHourPrediction = prediction?.predictions?.[0] ?? null
+    const predictedTemperature = nextHourPrediction?.predictions?.temperature
+    const predictedTime = nextHourPrediction?.target_time
+
+    const formattedPredictedTime = predictedTime
+        ? new Intl.DateTimeFormat("en-IN", {
+            timeZone: "Asia/Kolkata",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        }).format(new Date(predictedTime))
+        : "--"
+
     return (
         <div className="space-y-8">
             <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -98,7 +113,7 @@ function Dashboard() {
                         Current Temperature
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        28.4°C
+                        {latestWeather?.temperature.toFixed(1)}°C
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -106,7 +121,7 @@ function Dashboard() {
                         Humidity
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        72%
+                        {latestWeather?.humidity.toFixed(1)}%
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -114,7 +129,7 @@ function Dashboard() {
                         Rainfall
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        0.0 mm
+                        {latestWeather?.rain.toFixed(1)} mm
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -122,7 +137,7 @@ function Dashboard() {
                         Wind Speed
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        12 km/h
+                        {latestWeather?.wind_speed.toFixed(1)} km/h
                     </p>
                 </div>
             </section>
@@ -134,11 +149,11 @@ function Dashboard() {
                     </p>
 
                     <p className="mt-4 text-5xl font-bold tracking-tight text-gray-900">
-                        29.1°C
+                        {predictedTemperature?.toFixed(1) ?? "--"}°C
                     </p>
 
                     <p className="mt-2 text-sm text-gray-500">
-                        Expected at 6:00 pm
+                        Expected at {formattedPredictedTime}
                     </p>
                 </div>
             </section>
