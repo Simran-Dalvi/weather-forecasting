@@ -5,34 +5,6 @@ import {
     getWeatherPrediction,
 } from "../services/api"
 
-const temperatureData = [
-    { time: "12 PM", temperature: 29 },
-    { time: "1 PM", temperature: 30 },
-    { time: "2 PM", temperature: 31 },
-    { time: "3 PM", temperature: 30 },
-    { time: "4 PM", temperature: 29 },
-    { time: "5 PM", temperature: 28 },
-]
-
-const humidityData = [
-  { time: "12 PM", humidity: 65 },
-  { time: "1 PM", humidity: 62 },
-  { time: "2 PM", humidity: 60 },
-  { time: "3 PM", humidity: 64 },
-  { time: "4 PM", humidity: 68 },
-  { time: "5 PM", humidity: 72 },
-]
-
-const rainfallData = [
-  { time: "12 PM", rainfall: 0 },
-  { time: "1 PM", rainfall: 0 },
-  { time: "2 PM", rainfall: 0.2 },
-  { time: "3 PM", rainfall: 0 },
-  { time: "4 PM", rainfall: 0 },
-  { time: "5 PM", rainfall: 0 },
-]
-
-
 function Dashboard() {
     const [weather, setWeather] = useState(null)
     const [prediction, setPrediction] = useState(null)
@@ -71,6 +43,20 @@ function Dashboard() {
 
     const hourlyRecords = weather?.hourly ?? []
     const latestWeather = hourlyRecords[hourlyRecords.length - 1] ?? null
+
+    const chartData = hourlyRecords.map((record) => ({
+        time: new Intl.DateTimeFormat("en-IN", {
+            timeZone: "Asia/Kolkata",
+            hour:"numeric",
+            minute: "2-digit",
+            hour12: true,
+        }).format(new Date(record.timestamp)),
+
+        temperature: record.temperature,
+        humidity: record.humidity,
+        rainfall: record.rain,
+    }))
+
     const nextHourPrediction = prediction?.predictions?.[0] ?? null
     const predictedTemperature = nextHourPrediction?.predictions?.temperature
     const predictedTime = nextHourPrediction?.target_time
@@ -161,7 +147,7 @@ function Dashboard() {
             {/* Temperature Chart */}
             <WeatherChart 
                 title= "Temperature Trend"
-                data={temperatureData}
+                data={chartData}
                 dataKey="temperature"
                 color="#F97316"
                 unit="°C"
@@ -171,7 +157,7 @@ function Dashboard() {
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                 <WeatherChart
                     title="Humidity"
-                    data={humidityData}
+                    data={chartData}
                     dataKey="humidity"
                     color="#0EA5E9"
                     unit="%"
@@ -179,7 +165,7 @@ function Dashboard() {
 
                 <WeatherChart
                     title="Rainfall"
-                    data={rainfallData}
+                    data={chartData}
                     dataKey="rainfall"
                     color="#6366F1"
                     unit=" mm"
