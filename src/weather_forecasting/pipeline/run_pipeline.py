@@ -3,7 +3,7 @@ from weather_forecasting.pipeline.ingestion import ingest_weather_data
 from weather_forecasting.pipeline.processing import processing
 from weather_forecasting.pipeline.prediction import predictor
 
-def run_pipeline():
+def main():
     logger.info("Starting weather forecasting piepline.")
 
     try:
@@ -23,4 +23,4 @@ def run_pipeline():
         raise
 
 if __name__ == "__main__":
-    run_pipeline()
+    main()

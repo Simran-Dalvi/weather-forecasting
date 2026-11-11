@@ -10,27 +10,28 @@ function Dashboard() {
     const [prediction, setPrediction] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] =useState(null)
-    useEffect(() => {
-        async function fetchWeatherData() {
-            try {
-                setLoading(true)
-                setError(null)
+    async function loadWeather() {
+        try {
+            // setLoading(true)
+            // setError(null)
 
-                const [currentData, predictionData] = await Promise.all([
-                    getCurrentWeather(),
-                    getWeatherPrediction(),
-                ])
+            const [currentData, predictionData] = await Promise.all([
+                getCurrentWeather(),
+                getWeatherPrediction(),
+            ])
 
-                setWeather(currentData)
-                setPrediction(predictionData)
-            } catch(err) {
-                console.error("Failed to fetch weather data:", err)
-                setError("Unable to load weather data. Please try again.")
-            } finally {
-                setLoading(false)
-            }
+            setWeather(currentData)
+            setPrediction(predictionData)
+        } catch(err) {
+            console.error("Failed to fetch weather data:", err)
+            setError("Unable to load weather data. Please try again.")
+        } finally {
+            setLoading(false)
         }
-        fetchWeatherData()
+    }
+    
+    useEffect(() => {
+        loadWeather()
     }, [])
 
     if (loading) {
@@ -44,6 +45,25 @@ function Dashboard() {
     const hourlyRecords = weather?.hourly ?? []
     const latestWeather = hourlyRecords[hourlyRecords.length - 1] ?? null
 
+    if (!latestWeather) {
+        return (
+            <p className="text-gray-500">
+                No weather observations are currently available.
+            </p>
+        )
+    }
+
+    const observationTime = latestWeather?.timestamp
+        ? new Intl.DateTimeFormat("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "numeric",
+            month: "short",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        }).format(new Date(latestWeather.timestamp))
+        : "--"
+
     const chartData = hourlyRecords.map((record) => ({
         time: new Intl.DateTimeFormat("en-IN", {
             timeZone: "Asia/Kolkata",
@@ -52,9 +72,9 @@ function Dashboard() {
             hour12: true,
         }).format(new Date(record.timestamp)),
 
-        temperature: record.temperature,
-        humidity: record.humidity,
-        rainfall: record.rain,
+        temperature: record.temperature ?? null,
+        humidity: record.humidity ?? null,
+        rainfall: record.rain ?? null,
     }))
 
     const nextHourPrediction = prediction?.predictions?.[0] ?? null
@@ -78,7 +98,7 @@ function Dashboard() {
                         Weather Intelligence
                     </h1>
                     <p className="mt-1 text-sm text-gray-500">
-                        Updated 5 minutes ago
+                        Latest observation: {observationTime}
                     </p>
                 </div>
 
@@ -99,7 +119,7 @@ function Dashboard() {
                         Current Temperature
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.temperature.toFixed(1)}°C
+                        {latestWeather?.temperature.toFixed(1) ?? "--"}°C
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -107,7 +127,7 @@ function Dashboard() {
                         Humidity
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.humidity.toFixed(1)}%
+                        {latestWeather?.humidity.toFixed(1) ?? "--"}%
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -115,7 +135,7 @@ function Dashboard() {
                         Rainfall
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.rain.toFixed(1)} mm
+                        {latestWeather?.rain.toFixed(1) ?? "--"} mm
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -123,7 +143,7 @@ function Dashboard() {
                         Wind Speed
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.wind_speed.toFixed(1)} km/h
+                        {latestWeather?.wind_speed.toFixed(1) ?? "--"} km/h
                     </p>
                 </div>
             </section>

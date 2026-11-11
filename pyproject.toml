@@ -18,6 +18,10 @@ dependencies = [
     "scikit-learn>=1.6.1",
 ]
 
+[project.scripts]
+dev = "weather_forecasting.server.dev:main"
+pipeline = "weather_forecasting.pipeline.run_pipeline:main"
+
 [dependency-groups]
 dev = [
     "black>=26.5.1",
