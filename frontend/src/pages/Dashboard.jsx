@@ -10,28 +10,39 @@ function Dashboard() {
     const [prediction, setPrediction] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] =useState(null)
-    async function loadWeather() {
-        try {
-            // setLoading(true)
-            // setError(null)
-
-            const [currentData, predictionData] = await Promise.all([
-                getCurrentWeather(),
-                getWeatherPrediction(),
-            ])
-
-            setWeather(currentData)
-            setPrediction(predictionData)
-        } catch(err) {
-            console.error("Failed to fetch weather data:", err)
-            setError("Unable to load weather data. Please try again.")
-        } finally {
-            setLoading(false)
-        }
-    }
-    
     useEffect(() => {
-        loadWeather()
+        let ignore = false
+
+        async function fetchWeatherData() {
+            try {
+                const [currentData, predictionData] = await Promise.all([
+                    getCurrentWeather(),
+                    getWeatherPrediction(),
+                ])
+
+                if (ignore) return
+
+                setWeather(currentData)
+                setPrediction(predictionData)
+
+            } catch (err) {
+                if (ignore) return
+
+                console.error("Failed to fetch weather data:", err)
+                setError("Unable to load weather data. Please try again.")
+
+            } finally {
+                if (!ignore) {
+                    setLoading(false)
+                }
+            }
+        }
+
+        fetchWeatherData()
+
+        return () => {
+            ignore = true
+        }
     }, [])
 
     if (loading) {
@@ -119,7 +130,7 @@ function Dashboard() {
                         Current Temperature
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.temperature.toFixed(1) ?? "--"}°C
+                        {latestWeather?.temperature?.toFixed(1) ?? "--"}°C
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -127,7 +138,7 @@ function Dashboard() {
                         Humidity
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.humidity.toFixed(1) ?? "--"}%
+                        {latestWeather?.humidity?.toFixed(1) ?? "--"}%
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -135,7 +146,7 @@ function Dashboard() {
                         Rainfall
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.rain.toFixed(1) ?? "--"} mm
+                        {latestWeather?.rain?.toFixed(1) ?? "--"} mm
                     </p>
                 </div>
                 <div className="rounded-xl border bg-green-200">
@@ -143,7 +154,7 @@ function Dashboard() {
                         Wind Speed
                     </p>
                     <p className="mt-2 text-2xl font-bold text-gray-900 px-3">
-                        {latestWeather?.wind_speed.toFixed(1) ?? "--"} km/h
+                        {latestWeather?.wind_speed?.toFixed(1) ?? "--"} km/h
                     </p>
                 </div>
             </section>
